@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "./app/config/auth";
+import { auth } from "./app/libs/auth";
 
 const app = express();
 
@@ -14,6 +14,6 @@ app.get("/", (req, res) => {
 });
 
 // Better-Auth handler for authentication routes (/api/auth/*)
-app.all("/api/auth/*", toNodeHandler(auth));
+app.all("/api/auth", toNodeHandler(auth));
 
 export default app;
