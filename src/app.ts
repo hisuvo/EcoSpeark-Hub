@@ -1,7 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import { toNodeHandler } from 'better-auth/node';
-import { auth } from './config/auth';
+import express from "express";
+import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./app/config/auth";
 
 const app = express();
 
@@ -9,8 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.get('/', (req, res) => {
-    res.json({ message: 'Welcome to EcoSpark_Hub API' });
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to EcoSpark_Hub API" });
 });
 
 // Better-Auth handler for authentication routes (/api/auth/*)
