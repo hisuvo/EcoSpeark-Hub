@@ -1,0 +1,13 @@
+model Payment {
+  id        String   @id @default(uuid())
+  amount    Float
+  status    PaymentStatus @default(PENDING)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id])
+  
+  createdAt DateTime @default(now())
+
+  @@map("payments")
+}

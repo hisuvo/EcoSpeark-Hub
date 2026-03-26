@@ -1,0 +1,26 @@
+model Idea {
+  id          String     @id @default(uuid())
+  title       String
+  problem     String     @db.Text
+  solution    String     @db.Text
+  description String     @db.Text
+  imageUrl    String?
+  isPaid      Boolean    @default(false)
+  price       Float?     @default(0.0)
+  status      IdeaStatus @default(DRAFT)
+  feedback    String?    @db.Text
+  
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id])
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id])
+  
+  votes       Vote[]
+  comments    Comment[]
+  payments    Payment[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("ideas")
+}

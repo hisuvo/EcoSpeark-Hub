@@ -9,6 +9,16 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  ideas         Idea[]
+  votes         Vote[]
+  comments      Comment[]
+  payments      Payment[]
+
+  role               String    @default("MEMBER")
+  status             String    @default("ACTIVE")
+  needPasswordChange Boolean   @default(false)
+  isDeleted          Boolean   @default(false)
+  deletedAt          DateTime?
 
   @@unique([email])
   @@map("user")
