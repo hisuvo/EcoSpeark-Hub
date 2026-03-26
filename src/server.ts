@@ -1,9 +1,16 @@
-import app from './app';
-import dotenv from 'dotenv';
+import app from "./app";
+import dotenv from "dotenv";
+import { envVars } from "./app/config/env";
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
+const bootstrap = async () => {
+  try {
+    app.listen(envVars.PORT, () => {
+      console.log(`Server is running on http://localhost:${envVars.PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+  }
+};
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+bootstrap();
