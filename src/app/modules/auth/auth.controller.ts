@@ -4,6 +4,7 @@ import { AuthServices } from "./auth.service"
 import sendResponse from "../../shared/sendResponse"
 import { tokenUtils } from "../../utils/token"
 import status from "http-status"
+import AppError from "../../errorHelpers/AppError"
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
     const result = await AuthServices.registerUser(req.body);
@@ -49,12 +50,15 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     });
 })
 
-const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-    const result = await AuthServices.getAllUsers();
+const getMe = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+
+    const result = await AuthServices.getMe(user);
+
     sendResponse(res, {
-        statusCode: 200,
+        statusCode: status.OK,
         success: true,
-        message: "Users fetched successfully",
+        message: "User profile fetched successfully",
         data: result,
     });
 })
@@ -63,5 +67,5 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 export const AuthControlelr = {
     registerUser,
     loginUser,
-    getAllUsers
+    getMe
 }

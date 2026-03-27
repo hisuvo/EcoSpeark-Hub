@@ -5,6 +5,7 @@ import { auth } from "../../lib/auth";
 import { tokenUtils } from "../../utils/token";
 import { prisma } from "../../lib/prisma";
 import { UserStatus } from "../../../generated/prisma/enums";
+import { IRequestUser } from "../../interfaces/requestUser.interface";
 
 interface IRegisterUser {
   name: string;
@@ -53,9 +54,9 @@ const registerUser = async (payload: IRegisterUser) => {
     });
 
     return {
-      ...data,
       accessToken,
       refreshToken,
+      ...data,
     };
   } catch (error: any) {
     await prisma.user.delete({
@@ -75,19 +76,19 @@ const loginUser = async (payload: ILoginUser) => {
     },
   });
 
-  if(!data.user){
+  if (!data.user) {
     throw new AppError(status.UNAUTHORIZED, "Invalid email or password");
   }
 
-  if(!data.user.emailVerified){
+  if (!data.user.emailVerified) {
     throw new AppError(status.UNAUTHORIZED, "Email not verified");
   }
 
-  if(data.user.isDeleted || data.user.status === UserStatus.DELETED){
+  if (data.user.isDeleted || data.user.status === UserStatus.DELETED) {
     throw new AppError(status.UNAUTHORIZED, "User is deleted");
   }
 
-  if(data.user.status === UserStatus.BLOCKED){
+  if (data.user.status === UserStatus.BLOCKED) {
     throw new AppError(status.UNAUTHORIZED, "User is blocked");
   }
 
@@ -118,12 +119,36 @@ const loginUser = async (payload: ILoginUser) => {
   };
 };
 
-const getAllUsers = async () => {
-  return "All users";
+const getMe = async (user: IRequestUser) => {
+  const result = await prisma.user.findUnique({
+    where: {
+      id: user.userId,
+    },
+    include: {
+      ideas: {
+        include: {
+          comments: true,
+          category: true,
+          votes: true,
+          _count: {
+            select: {
+              comments: true,
+              votes: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!result) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+  return result;
 };
 
 export const AuthServices = {
   registerUser,
   loginUser,
-  getAllUsers,
+  getMe,
 };
