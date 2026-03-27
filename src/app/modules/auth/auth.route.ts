@@ -10,5 +10,7 @@ const router = Router();
 router.post("/register", validateRequest(AuthValidation.registerValidationSchema), AuthControlelr.registerUser);
 router.post("/login", validateRequest(AuthValidation.loginValidationSchema), AuthControlelr.loginUser);
 router.get("/me",checkAuth(Role.MEMBER,Role.ADMIN), AuthControlelr.getMe);
+router.post("/refresh-token",AuthControlelr.getNewToken);
+router.post("/change-password",checkAuth(Role.MEMBER,Role.ADMIN), AuthControlelr.changePassword);
 
 export const AuthRoutes = router;
