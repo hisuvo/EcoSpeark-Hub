@@ -14,5 +14,8 @@ model Comment {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  @@index([ideaId], name: "comment_idea_id_idx")
+  @@index([authorId], name: "comment_author_id_idx")
+  @@index([parentId], name: "comment_parent_id_idx")
   @@map("comments")
 }

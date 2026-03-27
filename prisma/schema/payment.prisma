@@ -9,5 +9,7 @@ model Payment {
   
   createdAt DateTime @default(now())
 
+  @@index([amount], name: "payment_amount_idx")
+  @@index([status], name: "payment_status_idx")
   @@map("payments")
 }

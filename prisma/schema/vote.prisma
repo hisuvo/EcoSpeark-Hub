@@ -9,5 +9,6 @@ model Vote {
   updatedAt DateTime @updatedAt
 
   @@unique([ideaId, userId]) // one vote per user per idea
+  @@index([ideaId], name: "vote_idea_id_idx")
   @@map("votes")
 }
