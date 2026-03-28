@@ -23,5 +23,8 @@ model Idea {
   updatedAt   DateTime   @updatedAt
 
   @@index([title], title:"idea_title_idx")
+  @@index([problem], title:"idea_problem_idx")
+  @@index([solution], title:"idea_solution_idx")
+  @@index([description], title:"idea_description_idx")
   @@map("ideas")
 }
