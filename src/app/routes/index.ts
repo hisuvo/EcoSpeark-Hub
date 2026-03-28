@@ -4,6 +4,7 @@ import { CategoryRoutes } from "../modules/category/category.route";
 import { UserRoutes } from "../modules/user/user.route";
 import { IdeaRoutes } from "../modules/idea/idea.route";
 import { VoteRoutes } from "../modules/vote/vote.route";
+import { CommentRoutes } from "../modules/comment/comment.route";
 
 const router = Router()
 
@@ -12,5 +13,6 @@ router.use("/categories", CategoryRoutes)
 router.use("/users", UserRoutes)
 router.use("/ideas", IdeaRoutes)
 router.use("/votes", VoteRoutes)
+router.use("/comments", CommentRoutes)
 
 export const ApplicationRoutes = router
