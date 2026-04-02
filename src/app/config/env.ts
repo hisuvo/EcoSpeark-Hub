@@ -21,6 +21,10 @@ interface EnvConfig {
     SMTP_PORT: string;
     SMTP_FROM: string;
   };
+  STRIPE: {
+    SECRET_KEY: string;
+    WEBHOOK_SECRET: string;
+  };
   SUPER_ADMIN_EMAIL: string;
   SUPER_ADMIN_PASSWORD: string;
 }
@@ -45,6 +49,8 @@ const loadEnvVariables = (): EnvConfig => {
     "EMAIL_SENDER_SMTP_USER",
     "EMAIL_SENDER_SMTP_PASS",
     "EMAIL_SENDER_SMTP_FROM",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
     "SUPER_ADMIN_EMAIL",
     "SUPER_ADMIN_PASSWORD",
   ];
@@ -76,6 +82,10 @@ const loadEnvVariables = (): EnvConfig => {
       SMTP_HOST: env.EMAIL_SENDER_SMTP_HOST as string,
       SMTP_PORT: env.EMAIL_SENDER_SMTP_PORT as string,
       SMTP_FROM: env.EMAIL_SENDER_SMTP_FROM as string,
+    },
+    STRIPE: {
+      SECRET_KEY: env.STRIPE_SECRET_KEY as string,
+      WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET as string,
     },
     SUPER_ADMIN_EMAIL: env.SUPER_ADMIN_EMAIL as string,
     SUPER_ADMIN_PASSWORD: env.SUPER_ADMIN_PASSWORD as string,
