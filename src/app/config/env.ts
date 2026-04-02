@@ -21,6 +21,11 @@ interface EnvConfig {
     SMTP_PORT: string;
     SMTP_FROM: string;
   };
+  CLOUDINARY: {
+    CLOUDINARY_CLOUD_NAME: string;
+    CLOUDINARY_API_KEY: string;
+    CLOUDINARY_API_SECRET: string;
+  };
   STRIPE: {
     SECRET_KEY: string;
     WEBHOOK_SECRET: string;
@@ -49,6 +54,9 @@ const loadEnvVariables = (): EnvConfig => {
     "EMAIL_SENDER_SMTP_USER",
     "EMAIL_SENDER_SMTP_PASS",
     "EMAIL_SENDER_SMTP_FROM",
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET",
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
     "SUPER_ADMIN_EMAIL",
@@ -82,6 +90,11 @@ const loadEnvVariables = (): EnvConfig => {
       SMTP_HOST: env.EMAIL_SENDER_SMTP_HOST as string,
       SMTP_PORT: env.EMAIL_SENDER_SMTP_PORT as string,
       SMTP_FROM: env.EMAIL_SENDER_SMTP_FROM as string,
+    },
+    CLOUDINARY: {
+      CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
+      CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+      CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string,
     },
     STRIPE: {
       SECRET_KEY: env.STRIPE_SECRET_KEY as string,
