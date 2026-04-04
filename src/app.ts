@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -14,7 +13,7 @@ import { PaymentController } from "./app/modules/payment/payment.controller";
 const app = express();
 
 app.post(
-  "/api/v1/webhook",
+  "/webhook",
   express.raw({ type: "application/json" }),
   PaymentController.handleWebhook,
 );
