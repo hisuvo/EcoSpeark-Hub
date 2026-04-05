@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import ejs from "ejs";
 import status from "http-status";
 import nodemailer from "nodemailer";
-import path from "path";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
+import { generateEmailTemplate } from "../templates/emailTemplate";
 
 const transporter = nodemailer.createTransport({
   host: envVars.EMAIL_SENDER.SMTP_HOST,
@@ -33,26 +32,19 @@ export const sendEmail = async ({
   templateData,
   templateName,
   to,
-  attachments,
 }: SendEmailOptions) => {
   try {
-    const templatePath = path.resolve(
-      process.cwd(),
-      `src/app/templates/${templateName}.ejs`,
-    );
-
-    const html = await ejs.renderFile(templatePath, templateData);
-
     const info = await transporter.sendMail({
       from: envVars.EMAIL_SENDER.SMTP_FROM,
       to: to,
       subject: subject,
-      html: html,
-      attachments: attachments?.map((attachment) => ({
-        filename: attachment.filename,
-        content: attachment.content,
-        contentType: attachment.contentType,
-      })),
+      html: generateEmailTemplate({
+        templateName,
+        appName: templateData.appName,
+        userName: templateData.userName,
+        otp: templateData.otp,
+        expierMinutes: templateData.expierMinutes,
+      }),
     });
 
     console.log(`Email sent to ${to} : ${info.messageId}`);
