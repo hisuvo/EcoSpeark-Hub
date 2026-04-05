@@ -33,4 +33,4 @@ router.delete(
   IdeaController.deleteIdea,
 );
 
-export const IdeaRoutes = router;
+export const IdeaRoutes: Router = router;

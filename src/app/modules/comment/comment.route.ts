@@ -5,11 +5,19 @@ import { Role } from "../../../generated/prisma/enums";
 import validateRequest from "../../middlewares/validateRequest";
 import { CommentValidation } from "./comment.validator";
 
-const router = Router()
+const router = Router();
 
-router.post("/:ideaId/comments",checkAuth(Role.MEMBER,Role.ADMIN),validateRequest(CommentValidation.createComment), CommentController.createComment)
+router.post(
+  "/:ideaId/comments",
+  checkAuth(Role.MEMBER, Role.ADMIN),
+  validateRequest(CommentValidation.createComment),
+  CommentController.createComment,
+);
 
-router.delete('/:commentId', checkAuth(Role.MEMBER,Role.ADMIN), CommentController.deleteComment);
+router.delete(
+  "/:commentId",
+  checkAuth(Role.MEMBER, Role.ADMIN),
+  CommentController.deleteComment,
+);
 
-
-export const CommentRoutes = router
+export const CommentRoutes: Router = router;

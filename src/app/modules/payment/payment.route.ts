@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Router } from "express";
 import { PaymentController } from "./payment.controller";
 import { checkAuth } from "../../middlewares/checkAuth";
 import { Role } from "../../../generated/prisma/enums";
@@ -17,4 +17,4 @@ router.get(
   PaymentController.checkPaymentStatus,
 );
 
-export const PaymentRoutes = router;
+export const PaymentRoutes: Router = router;
