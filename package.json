@@ -5,9 +5,12 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
+    "lint": "eslint ./src/**/*",
     "dev": "tsx watch src/server.ts",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
+    "push": "prisma db push",
+    "pull": "prisma db pull",
     "studio": "prisma studio",
     "build": "tsc",
     "stripe:webhook": "stripe listen --forward-to localhost:5000/api/v1/webhook"
