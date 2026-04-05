@@ -20,7 +20,7 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
-    message: "User registered successfully",
+    message: "User registered successfully and Check your email for verify",
     data: {
       token,
       accessToken,
@@ -65,13 +65,16 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getNewToken = catchAsync(async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken;
-    const betterAuthSessionToken = req.cookies["better-auth.session_token"];
-    if(!refreshToken){
-        throw new AppError(status.UNAUTHORIZED, "Refresh token not found");
-    }
+  const refreshToken = req.cookies.refreshToken;
+  const betterAuthSessionToken = req.cookies["better-auth.session_token"];
+  if (!refreshToken) {
+    throw new AppError(status.UNAUTHORIZED, "Refresh token not found");
+  }
 
-  const result = await AuthServices.getNewToken(refreshToken,betterAuthSessionToken);
+  const result = await AuthServices.getNewToken(
+    refreshToken,
+    betterAuthSessionToken,
+  );
 
   sendResponse(res, {
     statusCode: status.OK,
@@ -83,7 +86,7 @@ const getNewToken = catchAsync(async (req: Request, res: Response) => {
 
 const changePassword = catchAsync(async (req: Request, res: Response) => {
   const sessionToken = req.cookies["better-auth.session_token"];
-  const result = await AuthServices.changePassword(req.body,sessionToken);
+  const result = await AuthServices.changePassword(req.body, sessionToken);
 
   const { accessToken, refreshToken, token, ...rest } = result;
 
@@ -133,13 +136,12 @@ const logoutUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const verifyEmail = catchAsync(async (req: Request, res: Response) => {
-   await AuthServices.verifyEmail(req.body);
+  await AuthServices.verifyEmail(req.body);
 
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
     message: "Email verified successfully",
-
   });
 });
 
@@ -178,5 +180,5 @@ export const AuthController = {
   verifyEmail,
   forgetPassword,
   resetPassword,
-  handleOAuthError
+  handleOAuthError,
 };
