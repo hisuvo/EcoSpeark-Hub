@@ -1,5 +1,5 @@
 import status from "http-status";
-import { IdeaStatus, Role } from "../../../generated/prisma/enums";
+import { IdeaStatus, Role, PaymentStatus } from "../../../generated/prisma/enums";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import QueryBuilder from "../../utils/QueryBuilder";
@@ -52,13 +52,27 @@ const getAllIdeas = async (query: Record<string, unknown>) => {
   };
 
   const result = await prisma.idea.findMany(args);
+
+  // Sanitize description/solution for paid ideas in the list view
+  const sanitizedResult = result.map((idea) => {
+    if (idea.isPaid) {
+      return {
+        ...idea,
+        problem: idea.problem.substring(0, 150) + "...",
+        solution: "Hidden",
+        description: idea.description.substring(0, 150) + "...",
+      };
+    }
+    return idea;
+  });
+
   const total = await prisma.idea.count({ where: args.where || {} });
   return {
-    data: result,
+    data: sanitizedResult,
     meta: {
       total,
-      page: Number(query.page) || 1,
-      limit: Number(query.limit) || 10,
+      page: Number(query.page),
+      limit: Number(query.limit),
     },
   };
 };
@@ -99,26 +113,42 @@ const getIdeaById = async (id: string, userRole: Role, userId: string) => {
     } else if (userId && result.authorId === userId) {
       hasAccess = true;
     } else if (userId) {
-      const payment = await prisma.payment.findFirst({
-        where: { ideaId: id, userId: userId },
+      const payment = await prisma.payment.findUnique({
+        where: {
+          userId_ideaId: { userId, ideaId: id },
+        },
       });
-      if (payment) hasAccess = true;
+      if (payment?.status === PaymentStatus.COMPLETED) {
+        hasAccess = true;
+      }
     }
 
     if (!hasAccess) {
       return {
         ...result,
-        problem: "This is a premium idea. Please pay to view the full details.",
+        problem: result.problem.substring(0, 150) + "...",
         solution: "Hidden",
         description: "Hidden",
-        imageUrl: null,
         comments: [],
         isHidden: true,
+        isPurchased: false,
       };
     }
+    
+    // If has access, explicitly set flags
+    return {
+      ...result,
+      isHidden: false,
+      isPurchased: true,
+    };
   }
 
-  return result;
+  // For free ideas
+  return {
+    ...result,
+    isHidden: false,
+    isPurchased: false,
+  };
 };
 
 const updateIdea = async (

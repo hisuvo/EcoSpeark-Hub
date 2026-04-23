@@ -58,6 +58,11 @@ export type Idea = Prisma.IdeaModel
  */
 export type Payment = Prisma.PaymentModel
 /**
+ * Model Purchase
+ * 
+ */
+export type Purchase = Prisma.PurchaseModel
+/**
  * Model Vote
  * 
  */

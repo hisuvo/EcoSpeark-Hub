@@ -18,6 +18,8 @@ model Idea {
   votes       Vote[]
   comments    Comment[]
   payments    Payment[]
+  purchases   Purchase[]
+
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

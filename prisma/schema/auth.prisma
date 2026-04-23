@@ -13,6 +13,7 @@ model User {
   votes         Vote[]
   comments      Comment[]
   payments      Payment[]
+  purchases     Purchase[]
 
   role               Role           @default(MEMBER)
   status             UserStatus     @default(ACTIVE)

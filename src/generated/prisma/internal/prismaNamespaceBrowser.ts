@@ -59,6 +59,7 @@ export const ModelName = {
   Comment: 'Comment',
   Idea: 'Idea',
   Payment: 'Payment',
+  Purchase: 'Purchase',
   Vote: 'Vote'
 } as const
 
@@ -191,10 +192,23 @@ export const PaymentScalarFieldEnum = {
   status: 'status',
   userId: 'userId',
   ideaId: 'ideaId',
-  createdAt: 'createdAt'
+  stripePaymentIntentId: 'stripePaymentIntentId',
+  stripeClientSecret: 'stripeClientSecret',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
+
+
+export const PurchaseScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  ideaId: 'ideaId',
+  createdAt: 'createdAt'
+} as const
+
+export type PurchaseScalarFieldEnum = (typeof PurchaseScalarFieldEnum)[keyof typeof PurchaseScalarFieldEnum]
 
 
 export const VoteScalarFieldEnum = {

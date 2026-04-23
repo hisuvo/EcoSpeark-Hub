@@ -1,14 +1,14 @@
 import z from "zod";
 
 const createIdeaValidator = z.object({
-  title: z.string("Title is required"),
-  problem: z.string("Problem is required"),
-  solution: z.string("Solution is required"),
-  description: z.string("Description is required"),
+  title: z.string().min(1, "Title is required"),
+  problem: z.string().min(1, "Problem is required"),
+  solution: z.string().min(1, "Solution is required"),
+  description: z.string().min(1, "Description is required"),
   imageUrl: z.string().optional(),
   isPaid: z.boolean().optional(),
-  price: z.number().optional(),
-  categoryId: z.string("Category is required"),
+  price: z.coerce.number().optional(),
+  categoryId: z.string().min(1, "Category is required"),
 });
 
 const updateIdeaSchema = z.object({

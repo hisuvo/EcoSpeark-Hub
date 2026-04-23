@@ -23,6 +23,16 @@ interface ILoginUser {
 }
 
 const registerUser = async (payload: IRegisterUser) => {
+  const isEmailUsed = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+    },
+  });
+
+  if (isEmailUsed) {
+    throw new AppError(status.UNAUTHORIZED, "This email already used");
+  }
+
   const data = await auth.api.signUpEmail({
     body: {
       name: payload.name,
@@ -30,6 +40,8 @@ const registerUser = async (payload: IRegisterUser) => {
       password: payload.password,
     },
   });
+
+  console.log("register data here", data);
 
   if (!data.user) {
     throw new AppError(status.BAD_REQUEST, "Failed to register user");
@@ -57,9 +69,9 @@ const registerUser = async (payload: IRegisterUser) => {
     });
 
     return {
+      ...data,
       accessToken,
       refreshToken,
-      ...data,
     };
   } catch (error: any) {
     await prisma.user.delete({
@@ -79,12 +91,10 @@ const loginUser = async (payload: ILoginUser) => {
     },
   });
 
+  console.log("login user data here ->", data);
+
   if (!data.user) {
     throw new AppError(status.UNAUTHORIZED, "Invalid email or password");
-  }
-
-  if (!data.user.emailVerified) {
-    throw new AppError(status.UNAUTHORIZED, "Email not verified");
   }
 
   if (data.user.isDeleted || data.user.status === UserStatus.DELETED) {
@@ -115,6 +125,7 @@ const loginUser = async (payload: ILoginUser) => {
     emailVerified: data.user.emailVerified,
   });
 
+  console.log("✅ Login: All tokens created successfully");
   return {
     ...data,
     accessToken,
@@ -164,7 +175,10 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
     throw new AppError(status.UNAUTHORIZED, "Session not found");
   }
 
-  const verifyRefreshToken = jwtUtils.verifyToken(refreshToken,envVars.REFRESH_TOKEN_SECRET);
+  const verifyRefreshToken = jwtUtils.verifyToken(
+    refreshToken,
+    envVars.REFRESH_TOKEN_SECRET,
+  );
 
   if (!verifyRefreshToken) {
     throw new AppError(status.UNAUTHORIZED, "Refresh token not found");
@@ -208,7 +222,6 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
     refreshToken: newRefreshToken,
     sessionToken: token,
   };
-
 };
 
 interface IChangePassword {
@@ -216,9 +229,12 @@ interface IChangePassword {
   newPassword: string;
 }
 
-const changePassword = async (payload:IChangePassword,sessionToken:string) => {
+const changePassword = async (
+  payload: IChangePassword,
+  sessionToken: string,
+) => {
   const session = await auth.api.getSession({
-    headers:  new Headers({
+    headers: new Headers({
       Authorization: `Bearer ${sessionToken}`,
     }),
   });
@@ -227,7 +243,7 @@ const changePassword = async (payload:IChangePassword,sessionToken:string) => {
     throw new AppError(status.UNAUTHORIZED, "Invalid session token");
   }
 
-  const {currentPassword, newPassword} = payload
+  const { currentPassword, newPassword } = payload;
 
   const result = await auth.api.changePassword({
     body: {
@@ -240,7 +256,7 @@ const changePassword = async (payload:IChangePassword,sessionToken:string) => {
     }),
   });
 
-  if(session.user.needPasswordChange){
+  if (session.user.needPasswordChange) {
     await prisma.user.update({
       where: {
         id: session.user.id,
@@ -276,9 +292,9 @@ const changePassword = async (payload:IChangePassword,sessionToken:string) => {
     refreshToken,
     ...result,
   };
-}
+};
 
-const logoutUser = async (sessionToken:string) => {
+const logoutUser = async (sessionToken: string) => {
   const result = await auth.api.signOut({
     headers: new Headers({
       Authorization: `Bearer ${sessionToken}`,
@@ -286,10 +302,10 @@ const logoutUser = async (sessionToken:string) => {
   });
 
   return result;
-}
+};
 
-const verifyEmail = async (payload:{email:string, otp:string}) => {
-  const {email, otp} = payload
+const verifyEmail = async (payload: { email: string; otp: string }) => {
+  const { email, otp } = payload;
 
   const result = await auth.api.verifyEmailOTP({
     body: {
@@ -298,7 +314,7 @@ const verifyEmail = async (payload:{email:string, otp:string}) => {
     },
   });
 
-  if(result.user && !result.user.emailVerified){
+  if (result.user && !result.user.emailVerified) {
     await prisma.user.update({
       where: {
         id: result.user.id,
@@ -308,7 +324,7 @@ const verifyEmail = async (payload:{email:string, otp:string}) => {
       },
     });
   }
-}
+};
 
 const forgetPassword = async (email: string) => {
   const isUserExist = await prisma.user.findUnique({
@@ -342,10 +358,8 @@ interface IResetPassword {
   newPassword: string;
 }
 
-const resetPassword = async (
-  payload: IResetPassword
-) => {
-  const {email, otp, newPassword} = payload
+const resetPassword = async (payload: IResetPassword) => {
+  const { email, otp, newPassword } = payload;
   const isUserExist = await prisma.user.findUnique({
     where: {
       email,
@@ -399,5 +413,5 @@ export const AuthServices = {
   logoutUser,
   verifyEmail,
   forgetPassword,
-  resetPassword
+  resetPassword,
 };

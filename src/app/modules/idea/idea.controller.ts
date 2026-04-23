@@ -4,10 +4,7 @@ import sendResponse from "../../shared/sendResponse";
 import { status } from "http-status";
 
 const createIdea = catchAsync(async (req, res) => {
-  const payload = {
-    ...req.body,
-    imageUrl: req.file?.path,
-  };
+  const payload = req.body;
 
   const result = await IdeaService.createIdea(payload, req.user!.userId);
 
@@ -52,7 +49,7 @@ const updateIdea = catchAsync(async (req, res) => {
   const userRole = req.user?.role;
   const userId = req.user?.userId;
 
-  const payload = { ...req.body, imageUrl: req.file?.path };
+  const payload = req.body;
 
   const result = await IdeaService.updateIdea(
     id as string,

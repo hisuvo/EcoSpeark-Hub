@@ -13,9 +13,9 @@ import { PaymentController } from "./app/modules/payment/payment.controller";
 const app = express();
 
 app.post(
-  "/webhook",
+  "/api/v1/webhook",
   express.raw({ type: "application/json" }),
-  PaymentController.handleWebhook,
+  PaymentController.webhook,
 );
 
 // Middleware
