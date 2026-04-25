@@ -38,7 +38,7 @@ const getCategories = async (query: Record<string, unknown>) => {
     meta: {
       total,
       page: Number(query.page) || 1,
-      limit: Number(query.limit) || 10,
+      limit: Number(query.limit) || 2,
       totalPage: Math.ceil(total / (Number(query.limit) || 10)),
     },
   };

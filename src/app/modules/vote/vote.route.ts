@@ -5,6 +5,6 @@ import { VoteController } from "./vore.controller";
 
 const router = Router();
 
-router.post("/:ideaId/vote", checkAuth(Role.MEMBER), VoteController.castVote);
+router.post("/:ideaId/vote", checkAuth(Role.MEMBER, Role.ADMIN), VoteController.castVote);
 
 export const VoteRoutes = router;

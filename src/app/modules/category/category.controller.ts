@@ -21,7 +21,7 @@ const getCategories = catchAsync(async (req: Request, res: Response) => {
     statusCode: 200,
     success: true,
     message: "Categories fetched successfully",
-    data: result.data,
+    data: result,
   });
 });
 

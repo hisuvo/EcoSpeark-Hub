@@ -41,7 +41,7 @@ const updateUserRole = async (id: string, payload: { role: Role }) => {
     throw new AppError(status.NOT_FOUND, "User not found");
   }
 
-  const isValidRole = (role: any): role is Role => {
+  const isValidRole = (role: Role): role is Role => {
     return Object.values(Role).includes(role);
   };
 

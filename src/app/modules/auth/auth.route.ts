@@ -17,6 +17,7 @@ router.post(
   validateRequest(AuthValidation.loginValidationSchema),
   AuthController.loginUser,
 );
+
 router.get("/me", checkAuth(Role.MEMBER, Role.ADMIN), AuthController.getMe);
 
 router.post("/refresh-token", AuthController.getNewToken);

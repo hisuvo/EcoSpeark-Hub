@@ -34,6 +34,23 @@ const getAllIdeas = async (query: Record<string, unknown>) => {
 
   const args = await ideaQuery.getArgs();
 
+  // Handle special sorting for UPVOTE and COMMENT (relation counts)
+  if (args.orderBy) {
+    if (args.orderBy.UPVOTE) {
+      args.orderBy = {
+        votes: {
+          _count: args.orderBy.UPVOTE,
+        },
+      };
+    } else if (args.orderBy.COMMENT) {
+      args.orderBy = {
+        comments: {
+          _count: args.orderBy.COMMENT,
+        },
+      };
+    }
+  }
+
   // inject populate
   args.include = {
     category: true,
@@ -51,20 +68,37 @@ const getAllIdeas = async (query: Record<string, unknown>) => {
     },
   };
 
-  const result = await prisma.idea.findMany(args);
+  const result = (await prisma.idea.findMany(args)) as any[];
 
   // Sanitize description/solution for paid ideas in the list view
-  const sanitizedResult = result.map((idea) => {
-    if (idea.isPaid) {
-      return {
+  const sanitizedResult = await Promise.all(
+    result.map(async (idea) => {
+      const upvotes = await prisma.vote.count({
+        where: { ideaId: idea.id, type: "UPVOTE" },
+      });
+      const downvotes = await prisma.vote.count({
+        where: { ideaId: idea.id, type: "DOWNVOTE" },
+      });
+
+      const processedIdea = {
         ...idea,
-        problem: idea.problem.substring(0, 150) + "...",
-        solution: "Hidden",
-        description: idea.description.substring(0, 150) + "...",
+        _count: {
+          ...idea._count,
+          votes: upvotes - downvotes,
+        },
       };
-    }
-    return idea;
-  });
+
+      if (idea.isPaid) {
+        return {
+          ...processedIdea,
+          problem: idea.problem.substring(0, 150) + "...",
+          solution: "Hidden",
+          description: idea.description.substring(0, 150) + "...",
+        };
+      }
+      return processedIdea;
+    }),
+  );
 
   const total = await prisma.idea.count({ where: args.where || {} });
   return {
@@ -78,7 +112,7 @@ const getAllIdeas = async (query: Record<string, unknown>) => {
 };
 
 const getIdeaById = async (id: string, userRole: Role, userId: string) => {
-  const result = await prisma.idea.findUnique({
+  const result = (await prisma.idea.findUnique({
     where: { id },
     include: {
       category: true,
@@ -96,12 +130,32 @@ const getIdeaById = async (id: string, userRole: Role, userId: string) => {
           author: { select: { id: true, name: true } },
         },
       },
+      votes: {
+        where: { userId },
+        select: { type: true },
+      },
     },
-  });
+  })) as any;
 
   if (!result) {
     throw new AppError(status.NOT_FOUND, "Idea not found");
   }
+
+  // Calculate real vote count (upvotes - downvotes)
+  const upvotes = await prisma.vote.count({
+    where: { ideaId: id, type: "UPVOTE" },
+  });
+  const downvotes = await prisma.vote.count({
+    where: { ideaId: id, type: "DOWNVOTE" },
+  });
+
+  const finalResult = {
+    ...result,
+    _count: {
+      ...result._count,
+      votes: upvotes - downvotes,
+    },
+  };
 
   // If the idea is Paid, restrict access to description and solution unless the user is the author,
   // an admin, or has paid.
@@ -125,7 +179,7 @@ const getIdeaById = async (id: string, userRole: Role, userId: string) => {
 
     if (!hasAccess) {
       return {
-        ...result,
+        ...finalResult,
         problem: result.problem.substring(0, 150) + "...",
         solution: "Hidden",
         description: "Hidden",
@@ -134,10 +188,10 @@ const getIdeaById = async (id: string, userRole: Role, userId: string) => {
         isPurchased: false,
       };
     }
-    
+
     // If has access, explicitly set flags
     return {
-      ...result,
+      ...finalResult,
       isHidden: false,
       isPurchased: true,
     };
@@ -145,7 +199,7 @@ const getIdeaById = async (id: string, userRole: Role, userId: string) => {
 
   // For free ideas
   return {
-    ...result,
+    ...finalResult,
     isHidden: false,
     isPurchased: false,
   };

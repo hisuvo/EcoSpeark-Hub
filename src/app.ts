@@ -26,6 +26,7 @@ app.use(
       envVars.BETTER_AUTH_URL,
       "http://localhost:3000",
       "http://localhost:5000",
+      "https://ecospark-client-seven.vercel.app",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
