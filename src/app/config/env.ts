@@ -38,51 +38,42 @@ const loadEnvVariables = (): EnvConfig => {
   const env = process.env;
 
   const requireEnvVariable = [
-    "NODE_ENV",
-    "APP_NAME",
-    "PORT",
     "DATABASE_URL",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
-    "ACCESS_TOKEN_SECRET",
-    "ACCESS_TOKEN_EXPIRES_IN",
-    "REFRESH_TOKEN_SECRET",
-    "REFRESH_TOKEN_EXPIRES_IN",
     "FRONTEND_URL",
-    "EMAIL_SENDER_SMTP_HOST",
-    "EMAIL_SENDER_SMTP_PORT",
-    "EMAIL_SENDER_SMTP_USER",
-    "EMAIL_SENDER_SMTP_PASS",
-    "EMAIL_SENDER_SMTP_FROM",
-    "CLOUDINARY_CLOUD_NAME",
-    "CLOUDINARY_API_KEY",
-    "CLOUDINARY_API_SECRET",
-    "STRIPE_SECRET_KEY",
-    "STRIPE_WEBHOOK_SECRET",
     "ADMIN_EMAIL",
     "ADMIN_PASSWORD",
   ];
 
+  const missingVariables: string[] = [];
+
   requireEnvVariable.forEach((variable) => {
     if (!process.env[variable]) {
-      // throw new Error(`Environment variable ${variable} is required but not set in .env file.`);
-      throw new Error(
-        `Environment variable ${variable} is required but not set in .env file.`,
-      );
+      missingVariables.push(variable);
     }
   });
 
+  if (missingVariables.length > 0) {
+    const errorMsg = `❌ Missing Environment Variables: ${missingVariables.join(", ")}. Please add them to your .env file or Vercel Project Settings.`;
+    console.error(errorMsg);
+    // Only throw if we are missing critical variables like DATABASE_URL
+    if (missingVariables.includes("DATABASE_URL") || missingVariables.includes("BETTER_AUTH_SECRET")) {
+      throw new Error(errorMsg);
+    }
+  }
+
   return {
-    NODE_ENV: env.NODE_ENV as string,
-    APP_NAME: env.APP_NAME as string,
-    PORT: env.PORT as string,
+    NODE_ENV: (env.NODE_ENV as string) || "development",
+    APP_NAME: (env.APP_NAME as string) || "EcoSpark",
+    PORT: (env.PORT as string) || "5000",
     DATABASE_URL: env.DATABASE_URL as string,
     BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET as string,
     BETTER_AUTH_URL: env.BETTER_AUTH_URL as string,
-    ACCESS_TOKEN_SECRET: env.ACCESS_TOKEN_SECRET as string,
-    ACCESS_TOKEN_EXPIRES_IN: env.ACCESS_TOKEN_EXPIRES_IN as string,
-    REFRESH_TOKEN_SECRET: env.REFRESH_TOKEN_SECRET as string,
-    REFRESH_TOKEN_EXPIRES_IN: env.REFRESH_TOKEN_EXPIRES_IN as string,
+    ACCESS_TOKEN_SECRET: (env.ACCESS_TOKEN_SECRET as string) || "secret",
+    ACCESS_TOKEN_EXPIRES_IN: (env.ACCESS_TOKEN_EXPIRES_IN as string) || "1d",
+    REFRESH_TOKEN_SECRET: (env.REFRESH_TOKEN_SECRET as string) || "refresh_secret",
+    REFRESH_TOKEN_EXPIRES_IN: (env.REFRESH_TOKEN_EXPIRES_IN as string) || "7d",
     FRONTEND_URL: env.FRONTEND_URL as string,
     EMAIL_SENDER: {
       SMTP_USER: env.EMAIL_SENDER_SMTP_USER as string,
