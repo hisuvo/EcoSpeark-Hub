@@ -1,6 +1,9 @@
+import status from "http-status";
 import { prisma } from "../../lib/prisma";
 import QueryBuilder from "../../utils/QueryBuilder";
-import { ICategory } from "./category.interface";
+import { ICategory, IUpdateCategory } from "./category.interface";
+import AppError from "../../errorHelpers/AppError";
+import { Role } from "../../../generated/prisma/enums";
 
 const createCategory = async (payload: ICategory) => {
   const category = await prisma.category.findUnique({
@@ -44,7 +47,66 @@ const getCategories = async (query: Record<string, unknown>) => {
   };
 };
 
+const updateCategory = async (
+  categoryId: string,
+  payload: IUpdateCategory,
+  userRole: Role,
+) => {
+  const isExistCategory = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+    },
+  });
+
+  if (!isExistCategory) {
+    throw new AppError(status.NOT_FOUND, "Category not found");
+  }
+
+  if (userRole !== Role.ADMIN) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "You are not authorized to update this category",
+    );
+  }
+
+  const result = await prisma.category.update({
+    where: {
+      id: isExistCategory.id,
+    },
+    data: payload,
+  });
+
+  return result;
+};
+
+const deleteCategories = async (categoryId: string) => {
+  const isExistCategory = await prisma.category.findUnique({
+    where: {
+      id: categoryId,
+    },
+  });
+
+  if (!isExistCategory) {
+    throw new AppError(status.NOT_FOUND, "Category not found");
+  }
+
+  const response = await prisma.category.delete({
+    where: {
+      id: categoryId,
+    },
+  });
+
+  return response;
+};
+
 export const CategoryServices = {
   createCategory,
   getCategories,
+  updateCategory,
+  deleteCategories,
 };

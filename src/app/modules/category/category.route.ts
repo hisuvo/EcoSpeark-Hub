@@ -10,10 +10,22 @@ const router = Router();
 router.get("/", CategoryController.getCategories);
 
 router.post(
-    "/",
-    checkAuth(Role.ADMIN),
-    validateRequest(CategoryValidation.createCategory),
-    CategoryController.createCategory,
+  "/",
+  checkAuth(Role.ADMIN),
+  validateRequest(CategoryValidation.createCategory),
+  CategoryController.createCategory,
+);
+
+router.patch(
+  "/:categoryId",
+  checkAuth(Role.ADMIN),
+  CategoryController.updateCategory,
+);
+
+router.delete(
+  "/:categoryId",
+  checkAuth(Role.ADMIN),
+  CategoryController.deleteCategories,
 );
 
 export const CategoryRoutes = router;
