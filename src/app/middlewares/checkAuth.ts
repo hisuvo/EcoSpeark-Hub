@@ -59,8 +59,6 @@ export const checkAuth =
             res.setHeader("X-Session-Refresh", "true");
             res.setHeader("X-Session-Expires-At", expiresAt.toISOString());
             res.setHeader("X-Time-Remaining", timeRemaining.toString());
-
-            console.log("Session Expiring Soon!!");
           }
 
           if (

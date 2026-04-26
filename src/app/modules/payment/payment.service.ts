@@ -19,6 +19,10 @@ const createPaymentIntent = async (userId: string, ideaId: string) => {
     throw new AppError(400, "Already paid");
   }
 
+  if (existing?.status === PaymentStatus.PENDING && existing.stripePaymentIntentId) {
+    return { client_secret: existing.stripeClientSecret };
+  }
+
   const amount = Math.round((idea.price || 0) * 100);
 
   const paymentIntent = await stripe.paymentIntents.create({
@@ -31,15 +35,17 @@ const createPaymentIntent = async (userId: string, ideaId: string) => {
     where: { userId_ideaId: { userId, ideaId } },
     update: {
       stripePaymentIntentId: paymentIntent.id,
-      amount: idea.price ?? 0,
+      stripeClientSecret: paymentIntent.client_secret,
+      amount: amount,
       status: PaymentStatus.PENDING,
     },
     create: {
       userId,
       ideaId,
-      amount: idea.price ?? 0,
+      amount: amount,
       status: PaymentStatus.PENDING,
       stripePaymentIntentId: paymentIntent.id,
+      stripeClientSecret: paymentIntent.client_secret,
     },
   });
 
@@ -48,14 +54,34 @@ const createPaymentIntent = async (userId: string, ideaId: string) => {
 
 const checkPaymentStatus = async (userId: string, ideaId: string) => {
   const payment = await prisma.payment.findUnique({
-    // Use findUnique if userId_ideaId is unique
     where: {
       userId_ideaId: { userId, ideaId },
     },
   });
 
-  // Always compare using the Enum to be safe
-  return payment?.status === PaymentStatus.COMPLETED;
+  if (!payment) return false;
+
+  if (payment.status === PaymentStatus.COMPLETED) {
+    return true;
+  }
+
+  // Fallback: If status is still PENDING, verify directly with Stripe
+  if (payment.status === PaymentStatus.PENDING && payment.stripePaymentIntentId) {
+    try {
+      const intent = await stripe.paymentIntents.retrieve(payment.stripePaymentIntentId);
+      if (intent.status === "succeeded") {
+        await prisma.payment.update({
+          where: { userId_ideaId: { userId, ideaId } },
+          data: { status: PaymentStatus.COMPLETED },
+        });
+        return true;
+      }
+    } catch (error) {
+      console.error("Error verifying payment intent:", error);
+    }
+  }
+
+  return false;
 };
 
 const confirmWebhook = async (signature: string, payload: Buffer) => {
@@ -70,12 +96,33 @@ const confirmWebhook = async (signature: string, payload: Buffer) => {
     throw new AppError(400, err.message);
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const intent = event.data.object;
-    await prisma.payment.update({
-      where: { stripePaymentIntentId: intent.id },
-      data: { status: PaymentStatus.COMPLETED },
-    });
+  // Handle both payment_intent.succeeded and charge.succeeded as a fallback
+  if (
+    event.type === "payment_intent.succeeded" ||
+    event.type === "charge.succeeded"
+  ) {
+    const intent = event.data.object as any;
+    // For charge.succeeded, the metadata might be under intent.metadata or intent.payment_intent.metadata
+    // But for payment_intent.succeeded, it's directly on intent.metadata
+    const metadata = intent.metadata || {};
+    const { userId, ideaId } = metadata;
+
+    if (userId && ideaId) {
+      console.log(`✅ Webhook: Updating payment to COMPLETED for Idea ${ideaId}, User ${userId}`);
+      await prisma.payment.update({
+        where: { userId_ideaId: { userId, ideaId } },
+        data: {
+          status: PaymentStatus.COMPLETED,
+          stripePaymentIntentId: intent.id,
+        },
+      });
+    } else {
+      console.log(`⚠️ Webhook: Received ${event.type} but missing metadata. Falling back to Intent ID lookup.`);
+      await prisma.payment.update({
+        where: { stripePaymentIntentId: intent.id || intent.payment_intent },
+        data: { status: PaymentStatus.COMPLETED },
+      });
+    }
   }
   return { received: true };
 };

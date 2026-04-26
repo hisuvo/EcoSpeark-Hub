@@ -74,15 +74,29 @@ const checkPaymentStatus = catchAsync(async (req: Request, res: Response) => {
 //   });
 // });
 
+
 export const webhook = async (req: Request, res: Response) => {
-  const signature = req.headers["stripe-signature"] as string;
+  try {
+    const signature = req.headers["stripe-signature"] as string;
 
-  const result = await PaymentService.confirmWebhook(
-    signature,
-    req.body, // MUST be Buffer
-  );
+    if (!signature) {
+      console.error("❌ Webhook Error: Missing stripe-signature header");
+      return res.status(400).send("Missing signature");
+    }
 
-  res.status(200).json(result);
+    const result = await PaymentService.confirmWebhook(
+      signature,
+      req.body,
+    );
+
+    res.status(200).json(result);
+  } catch (error: any) {
+    console.error("❌ Stripe Webhook Error:", error.message);
+    res.status(error.statusCode || 400).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 export const PaymentController = {
