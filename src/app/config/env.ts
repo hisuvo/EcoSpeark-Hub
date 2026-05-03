@@ -65,7 +65,19 @@ const loadEnvVariables = (): EnvConfig => {
 
   requireEnvVariable.forEach((variable) => {
     if (!process.env[variable]) {
-      // throw new Error(`Environment variable ${variable} is required but not set in .env file.`);
+      if (variable === "APP_NAME") {
+        process.env[variable] = "EcoSpark";
+        return;
+      }
+      if (variable === "NODE_ENV") {
+        process.env[variable] = "development";
+        return;
+      }
+      if (variable === "PORT") {
+        process.env[variable] = "5000";
+        return;
+      }
+
       throw new Error(
         `Environment variable ${variable} is required but not set in .env file.`,
       );

@@ -7,7 +7,7 @@ const createIdeaValidator = z.object({
   description: z.string("Description is required"),
   imageUrl: z.string().optional(),
   isPaid: z.boolean().optional(),
-  price: z.number().optional(),
+  price: z.coerce.number().optional(),
   categoryId: z.string("Category is required"),
 });
 

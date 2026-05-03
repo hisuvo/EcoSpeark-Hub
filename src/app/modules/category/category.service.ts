@@ -1,35 +1,43 @@
-import { prisma } from "../../lib/prisma"
-import QueryBuilder from "../../utils/QueryBuilder"
-import { ICategory } from "./category.interface"
+import { prisma } from "../../lib/prisma";
+import QueryBuilder from "../../utils/QueryBuilder";
+import { ICategory } from "./category.interface";
 
 const createCategory = async (payload: ICategory) => {
+  const category = await prisma.category.findUnique({
+    where: {
+      name: payload.name,
+    },
+  });
 
-    const category = await prisma.category.findUnique({
-        where: {
-            name: payload.name
-        }
-    })
+  if (category) {
+    throw new Error("Category already exists");
+  }
 
-    if (category) {
-        throw new Error("Category already exists")
-    }
-
-    const result = await prisma.category.create({
-        data: payload
-    })
-    return result
-}
+  const result = await prisma.category.create({
+    data: payload,
+  });
+  return result;
+};
 
 const getCategories = async (query: Record<string, unknown>) => {
   const categoryQuery = new QueryBuilder(query)
-    .search(['name', 'description'])
+    .search(["name", "description"])
     .filter()
     .sort()
     .paginate();
 
   const args = categoryQuery.getArgs();
-  const result = await prisma.category.findMany(args);
-  
+  const result = await prisma.category.findMany({
+    ...args,
+    include: {
+      _count: {
+        select: {
+          ideas: true,
+        },
+      },
+    },
+  });
+
   const total = await prisma.category.count({
     where: args.where || {},
   });
@@ -46,6 +54,6 @@ const getCategories = async (query: Record<string, unknown>) => {
 };
 
 export const CategoryServices = {
-    createCategory,
-    getCategories
-}
+  createCategory,
+  getCategories,
+};

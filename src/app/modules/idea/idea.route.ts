@@ -4,26 +4,25 @@ import { IdeaController } from "./idea.controller";
 import { Role } from "../../../generated/prisma/enums";
 import validateRequest from "../../middlewares/validateRequest";
 import { IdeaValidator } from "./idea.validator";
-import { multerUpload } from "../../config/multer.config";
+
+import { extractAuthOptional } from "../../middlewares/extractAuthOptional";
 
 const router = Router();
 
 // publicly accessable idea routes
-router.get("/", IdeaController.getAllIdeas);
-router.get("/:id", IdeaController.getIdeaById);
+router.get("/", extractAuthOptional, IdeaController.getAllIdeas);
+router.get("/:id", extractAuthOptional, IdeaController.getIdeaById);
 
 // idea routes that require authentication
 router.post(
   "/",
   checkAuth(Role.MEMBER),
-  multerUpload.single("file"),
   validateRequest(IdeaValidator.createIdeaValidator),
   IdeaController.createIdea,
 );
 router.patch(
   "/:id",
   checkAuth(Role.MEMBER, Role.ADMIN),
-  multerUpload.single("file"),
   validateRequest(IdeaValidator.updateIdeaSchema),
   IdeaController.updateIdea,
 );

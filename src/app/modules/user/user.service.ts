@@ -17,6 +17,8 @@ const getAllUsers = async (query: Record<string, unknown>) => {
     name: true,
     email: true,
     role: true,
+    status: true,
+    image: true,
     createdAt: true,
   };
 
@@ -59,6 +61,8 @@ const updateUserRole = async (id: string, payload: { role: Role }) => {
       name: true,
       email: true,
       role: true,
+      status: true,
+      image: true,
       createdAt: true,
     },
   });

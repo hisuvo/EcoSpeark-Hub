@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import status from "http-status";
 import { IdeaStatus, Role } from "../../../generated/prisma/enums";
 import AppError from "../../errorHelpers/AppError";
@@ -25,7 +26,11 @@ const createIdea = async (payload: CreateIdeaPayload, authorId: string) => {
   return result;
 };
 
-const getAllIdeas = async (query: Record<string, unknown>) => {
+const getAllIdeas = async (
+  query: Record<string, unknown>,
+  userRole?: Role,
+  userId?: string,
+) => {
   const ideaQuery = new QueryBuilder(query)
     .search(["title", "problem", "solution", "description"])
     .filter()
@@ -33,6 +38,23 @@ const getAllIdeas = async (query: Record<string, unknown>) => {
     .paginate();
 
   const args = await ideaQuery.getArgs();
+
+  // Handle special sorting for UPVOTE and COMMENT (relation counts)
+  if (args.orderBy) {
+    if (query.sortBy === "UPVOTE") {
+      args.orderBy = {
+        votes: {
+          _count: query.sortOrder === "asc" ? "asc" : "desc",
+        },
+      };
+    } else if (query.sortBy === "COMMENT") {
+      args.orderBy = {
+        comments: {
+          _count: query.sortOrder === "asc" ? "asc" : "desc",
+        },
+      };
+    }
+  }
 
   // inject populate
   args.include = {
@@ -51,10 +73,41 @@ const getAllIdeas = async (query: Record<string, unknown>) => {
     },
   };
 
-  const result = await prisma.idea.findMany(args);
+  const result = (await prisma.idea.findMany(args)) as any[];
+
+  // Mask sensitive content for paid ideas unless user is admin or author
+  const sanitizedResult = await Promise.all(
+    result.map(async (idea) => {
+      if (idea.isPaid) {
+        let hasAccess = false;
+        if (userRole === Role.ADMIN) {
+          hasAccess = true;
+        } else if (userId && idea.authorId === userId) {
+          hasAccess = true;
+        } else if (userId) {
+          const payment = await prisma.payment.findFirst({
+            where: { ideaId: idea.id, userId: userId },
+          });
+          if (payment) hasAccess = true;
+        }
+
+        if (!hasAccess) {
+          return {
+            ...idea,
+            problem: idea.problem.substring(0, 100) + "...",
+            solution: "Hidden",
+            description: idea.description.substring(0, 100) + "...",
+            imageUrl: null,
+          };
+        }
+      }
+      return idea;
+    }),
+  );
+
   const total = await prisma.idea.count({ where: args.where || {} });
   return {
-    data: result,
+    data: sanitizedResult,
     meta: {
       total,
       page: Number(query.page) || 1,
@@ -95,14 +148,15 @@ const getIdeaById = async (id: string, userRole: Role, userId: string) => {
     let hasAccess = false;
 
     if (userRole === Role.ADMIN) {
-      hasAccess = true;
+      hasAccess = true; // Admins have full access
     } else if (userId && result.authorId === userId) {
-      hasAccess = true;
+      hasAccess = true; // Idea owner has full access
+      console.log("User is the author of the idea. Payment not required.");
     } else if (userId) {
       const payment = await prisma.payment.findFirst({
         where: { ideaId: id, userId: userId },
       });
-      if (payment) hasAccess = true;
+      if (payment) hasAccess = true; // Check if the user has made a payment
     }
 
     if (!hasAccess) {
