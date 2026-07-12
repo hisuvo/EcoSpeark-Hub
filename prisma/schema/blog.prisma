@@ -1,0 +1,15 @@
+model Blog {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?
+  author    User    @relation(fields: [authorId], references: [id])
+  authorId  String
+
+  excerpt   String
+  category  String
+  status    BlogStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

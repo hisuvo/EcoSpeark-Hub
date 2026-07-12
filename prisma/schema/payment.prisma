@@ -35,7 +35,7 @@ model Payment {
   ideaId    String
   idea      Idea     @relation(fields: [ideaId], references: [id])
 
-  stripePaymentIntentId String   @unique
+  stripePaymentIntentId String?   @unique
   stripeClientSecret    String?
 
   createdAt DateTime @default(now())
@@ -45,8 +45,9 @@ model Payment {
   @@unique([userId, ideaId])
 
   // indexes
-  @@index([status])
-  @@index([stripePaymentIntentId])
+  @@index([amount], name: "payment_amount_idx")
+  @@index([status], name: "payment_status_idx")
+  @@index([stripePaymentIntentId], name:"stripe_payment_intent_idx")
 
   @@map("payments")
 }

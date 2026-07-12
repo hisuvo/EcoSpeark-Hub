@@ -26,3 +26,9 @@ enum UserStatus {
   BLOCKED
   DELETED
 }
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
