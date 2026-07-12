@@ -19,6 +19,11 @@ router.post(
 );
 
 router.get("/me", checkAuth(Role.MEMBER, Role.ADMIN), AuthController.getMe);
+router.put(
+  "/me",
+  checkAuth(Role.MEMBER, Role.ADMIN),
+  AuthController.updateProfile,
+);
 
 router.post("/refresh-token", AuthController.getNewToken);
 

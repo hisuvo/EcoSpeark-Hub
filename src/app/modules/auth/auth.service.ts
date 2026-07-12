@@ -161,6 +161,21 @@ const getMe = async (user: IRequestUser) => {
   return result;
 };
 
+const updateProfile = async (
+  user: IRequestUser,
+  payload: { name?: string; email?: string; image?: string },
+) => {
+  const result = await prisma.user.update({
+    where: {
+      id: user.userId,
+    },
+    data: {
+      ...payload,
+    },
+  });
+  return result;
+};
+
 const getNewToken = async (refreshToken: string, sessionToken: string) => {
   const isExsistSessionToken = await prisma.session.findUnique({
     where: {
@@ -414,4 +429,5 @@ export const AuthServices = {
   verifyEmail,
   forgetPassword,
   resetPassword,
+  updateProfile,
 };
